@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Operator Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="sidebar">
+  <img src="assets/merlin-logo.png">
+  <a>Dashboard</a>
+  <a>My Dispatch</a>
+</div>
+
+<div class="main">
+  <h2>Operator Dashboard</h2>
+  <div class="card">Operator can create dispatch entries only.</div>
+</div>
+
+<script type="module">
+import { checkRole } from "./js/role-check.js";
+checkRole("operator");
+</script>
+
+</body>
+</html>
