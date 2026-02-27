@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Merlin Infraspace RMC</title>
+
+<style>
+body { font-family: Arial; margin:0; background:#f4f6f9; }
+header { background:#1f3c88; color:white; padding:15px; text-align:center; }
+.container { padding:15px; }
+.card { background:white; padding:15px; margin-bottom:15px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+button { background:#1f3c88; color:white; border:none; padding:10px; width:100%; margin-top:5px; border-radius:5px;}
+input, select { padding:8px; width:100%; margin-top:5px; }
+.nav { position:fixed; bottom:0; width:100%; background:#1f3c88; display:flex; justify-content:space-around; color:white;}
+.nav div { padding:10px; cursor:pointer; }
+.hidden { display:none; }
+.stat { font-size:18px; font-weight:bold; }
+</style>
+</head>
+<body>
+
+<header>Merlin Infraspace RMC</header>
+
+<div class="container">
+
+<!-- LOGIN -->
+<div id="login">
+<h3>Login</h3>
+<input type="text" id="username" placeholder="Username">
+<input type="password" id="password" placeholder="Password">
+<select id="role">
+<option>Admin</option>
+<option>Dispatch</option>
+<option>Viewer</option>
+</select>
+<button onclick="login()">Login</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+<div class="card">
+<h3>Dashboard</h3>
+<p>Total Orders: <span id="totalOrders" class="stat"></span></p>
+<p>Total Quantity (m³): <span id="totalQty" class="stat"></span></p>
+<p>Total Revenue (₹): <span id="totalRevenue" class="stat"></span></p>
+<p>Delivered Trips: <span id="deliveredTrips" class="stat"></span></p>
+</div>
+
+<div class="card">
+<h3>Material Stock (Ton)</h3>
+<p>Cement: <span id="cementStock"></span></p>
+<p>Sand: <span id="sandStock"></span></p>
+<p>Aggregate: <span id="aggStock"></span></p>
+</div>
+</div>
+
+<!-- ORDERS -->
+<div id="orders" class="hidden">
+<div class="card">
+<h3>Add Order</h3>
+<input id="customer" placeholder="Customer Name">
+<select id="grade">
+<option>M20</option>
+<option>M25</option>
+<option>M30</option>
+</select>
+<input type="number" id="qty" placeholder="Quantity (m³)">
+<input type="number" id="rate" placeholder="Rate per m³">
+<button onclick="addOrder()">Add Order</button>
+</div>
+<div class="card">
+<h3>Order List</h3>
+<div id="orderList"></div>
+</div>
+</div>
+
+<!-- DISPATCH -->
+<div id="dispatch" class="hidden">
+<div class="card">
+<h3>Dispatch</h3>
+<select id="orderSelect"></select>
+<input id="vehicle" placeholder="Vehicle Number">
+<select id="tripStatus">
+<option>Pending</option>
+<option>In Transit</option>
+<option>Delivered</option>
+</select>
+<button onclick="updateDispatch()">Update</button>
+</div>
+<div class="card">
+<h3>Dispatch Records</h3>
+<div id="dispatchList"></div>
+</div>
+</div>
+
+</div>
+
+<div class="nav hidden" id="nav">
+<div onclick="show('dashboard')">Dashboard</div>
+<div onclick="show('orders')">Orders</div>
+<div onclick="show('dispatch')">Dispatch</div>
+</div>
+
+<script>
+let orders = JSON.parse(localStorage.getItem("orders")) || [];
+let dispatches = JSON.parse(localStorage.getItem("dispatches")) || [];
+
+let cement = localStorage.getItem("cement") || 100;
+let sand = localStorage.getItem("sand") || 100;
+let agg = localStorage.getItem("agg") || 100;
+
+function save() {
+localStorage.setItem("orders", JSON.stringify(orders));
+localStorage.setItem("dispatches", JSON.stringify(dispatches));
+localStorage.setItem("cement", cement);
+localStorage.setItem("sand", sand);
+localStorage.setItem("agg", agg);
+}
+
+function login() {
+let u = document.getElementById("username").value;
+let p = document.getElementById("password").value;
+if(u && p) {
+document.getElementById("login").classList.add("hidden");
+document.getElementById("nav").classList.remove("hidden");
+show("dashboard");
+updateDashboard();
+}
+}
+
+function show(section) {
+["dashboard","orders","dispatch"].forEach(id=>{
+document.getElementById(id).classList.add("hidden");
+});
+document.getElementById(section).classList.remove("hidden");
+updateDashboard();
+displayOrders();
+displayDispatch();
+}
+
+function addOrder() {
+let customer = document.getElementById("customer").value;
+let qty = parseFloat(document.getElementById("qty").value);
+let rate = parseFloat(document.getElementById("rate").value);
+let total = qty * rate;
+let gst = total * 0.18;
+let grand = total + gst;
+
+orders.push({customer, qty, total, grand});
+cement -= qty * 0.3;
+sand -= qty * 0.7;
+agg -= qty * 1.2;
+
+save();
+displayOrders();
+updateDashboard();
+}
+
+function displayOrders() {
+let list = document.getElementById("orderList");
+let select = document.getElementById("orderSelect");
+list.innerHTML="";
+select.innerHTML="";
+orders.forEach((o,i)=>{
+list.innerHTML += `<p>${o.customer} - ₹${o.grand.toFixed(0)}</p>`;
+select.innerHTML += `<option value="${i}">${o.customer}</option>`;
+});
+}
+
+function updateDispatch() {
+let index = document.getElementById("orderSelect").value;
+let vehicle = document.getElementById("vehicle").value;
+let status = document.getElementById("tripStatus").value;
+
+dispatches.push({customer:orders[index].customer, vehicle, status});
+save();
+displayDispatch();
+updateDashboard();
+}
+
+function displayDispatch() {
+let list = document.getElementById("dispatchList");
+list.innerHTML="";
+dispatches.forEach(d=>{
+list.innerHTML += `<p>${d.customer} - ${d.vehicle} - ${d.status}</p>`;
+});
+}
+
+function updateDashboard() {
+document.getElementById("totalOrders").innerText = orders.length;
+document.getElementById("totalQty").innerText = orders.reduce((a,b)=>a+b.qty,0);
+document.getElementById("totalRevenue").innerText = orders.reduce((a,b)=>a+b.grand,0).toFixed(0);
+document.getElementById("deliveredTrips").innerText = dispatches.filter(d=>d.status=="Delivered").length;
+
+document.getElementById("cementStock").innerText = cement.toFixed(1);
+document.getElementById("sandStock").innerText = sand.toFixed(1);
+document.getElementById("aggStock").innerText = agg.toFixed(1);
+}
+
+updateDashboard();
+</script>
+
+</body>
+</html>
