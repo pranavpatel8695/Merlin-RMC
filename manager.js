@@ -48,7 +48,7 @@ async function loadCustomers() {
 
     const overdueDays = diffDays - creditDays;
 
-    if (overdueDays > 0) {
+    if (overdueDays > 0)
       alert(
         `⚠ PAYMENT REMINDER\n\nCustomer: ${data.name}\nOverdue By: ${overdueDays} days\n\nAsk Manager to remind customer.`
       );
