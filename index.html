@@ -1,14 +1,49 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Merlin RMC ERP</title>
+  <title>Merlin RMC Login</title>
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    body {
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      background:#f4f6f9;
+      font-family:Arial;
+    }
+    .login-box {
+      background:white;
+      padding:30px;
+      width:350px;
+      box-shadow:0 0 15px rgba(0,0,0,0.1);
+      border-radius:8px;
+      text-align:center;
+    }
+    .login-box img {
+      width:120px;
+      margin-bottom:20px;
+    }
+    input {
+      width:100%;
+      padding:10px;
+      margin:10px 0;
+    }
+    button {
+      width:100%;
+      padding:10px;
+      background:#003366;
+      color:white;
+      border:none;
+      cursor:pointer;
+    }
+  </style>
 </head>
-<body class="login-body">
+<body>
 
 <div class="login-box">
-  <img src="assets/merlin-logo.png" class="logo">
-  <h2>Merlin RMC ERP Login</h2>
+  <img src="assets/merlin-logo.png">
+  <h3>Merlin Infraspace RMC</h3>
 
   <input type="email" id="email" placeholder="Email">
   <input type="password" id="password" placeholder="Password">
@@ -16,6 +51,64 @@
   <button onclick="login()">Login</button>
 </div>
 
-<script type="module" src="js/auth.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "merlin-infraspace-rmc.firebaseapp.com",
+  projectId: "merlin-infraspace-rmc",
+  storageBucket: "merlin-infraspace-rmc.firebasestorage.app",
+  messagingSenderId: "927806621772",
+  appId: "1:927806621772:web:c10ecb5c8d766597224ce9"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+window.login = async function() {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  if (!email || !password) {
+    alert("Please enter email and password");
+    return;
+  }
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+
+    // ✅ Save email for role-check
+    localStorage.setItem("userEmail", email);
+
+    const userRef = doc(db, "users", email);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      alert("User role not assigned in Firestore.");
+      return;
+    }
+
+    const role = userSnap.data().role;
+
+    if (role === "admin") {
+      window.location.href = "admin.html";
+    } else if (role === "manager") {
+      window.location.href = "manager.html";
+    } else if (role === "operator") {
+      window.location.href = "operator.html";
+    } else {
+      alert("Invalid role assigned.");
+    }
+
+  } catch (error) {
+    alert("Login Failed: " + error.message);
+  }
+};
+</script>
+
 </body>
 </html>
