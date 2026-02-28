@@ -15,10 +15,21 @@
 
 <div class="main">
   <h2>Manager Dashboard</h2>
-  <div class="card">Manager can add customers and set credit days.</div>
+
+  <div class="card">
+    <h3>Add Customer</h3>
+    <input type="text" id="custName" placeholder="Customer Name">
+    <input type="number" id="creditDays" placeholder="Credit Days">
+    <button onclick="addCustomer()">Add Customer</button>
+  </div>
+
+  <div class="card">
+    <h3>Customer List</h3>
+    <div id="customerList"></div>
+  </div>
 </div>
 
-<script type="module">
+<script type="module" src="js/manager.js"></script>
 import { checkRole } from "./js/role-check.js";
 checkRole("manager");
 </script>
