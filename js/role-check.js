@@ -1,17 +1,27 @@
-import { auth, db } from "./firebase-config.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { db } from "./firebase-config.js";
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-export function checkRole(requiredRole) {
-  auth.onAuthStateChanged(async (user) => {
-    if (!user) {
-      window.location.href = "index.html";
-    } else {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      const role = snap.data().role;
+export async function checkRole(requiredRole) {
+  const email = localStorage.getItem("userEmail");
 
-      if (role !== requiredRole) {
-        window.location.href = "index.html";
-      }
-    }
-  });
+  if (!email) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  const userRef = doc(db, "users", email);
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) {
+    alert("User not found");
+    window.location.href = "index.html";
+    return;
+  }
+
+  const role = userSnap.data().role;
+
+  if (role !== requiredRole) {
+    alert("Access Denied");
+    window.location.href = "index.html";
+  }
 }
